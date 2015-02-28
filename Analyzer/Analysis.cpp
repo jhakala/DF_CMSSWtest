@@ -213,7 +213,7 @@ void Analysis::Process() {
   fout = new TFile(Output_File.c_str(), "RECREATE");
 
   DoHlt();
-  //MakeTimeSlewPlots();
+  MakeTimeSlewPlots();
   //MakePedestalPlots();
   
 }
@@ -224,8 +224,10 @@ void Analysis::DefineHistograms()
   TimeSlewPulse_HB = new TH2F("TimeSlewPulse_HB","Time Slew [ns] vs Charge in TS4 [fC] in HB",25,-14.5,10.5,100,10.,510.);
   TimeSlewPulse_HE = new TH2F("TimeSlewPulse_HE","Time Slew [ns] vs Charge in TS4 [fC] in HE",25,-14.5,10.5,100,10.,510.);
 
-  logtimeslewFit = new TF1("logtimeslewFit", "[0]+[1]*TMath::Log(x+[2])",10.,510.);
-  logtimeslewFit->SetParameters(9.45262e+00, -1.94806e+00, 8.81768e+01);
+  //logtimeslewFit = new TF1("logtimeslewFit", "[0]+[1]*TMath::Log(x+[2])",10.,510.);
+  logtimeslewFit = new TF1("logtimeslewFit", "[0]+[1]*TMath::Log(x)",10.,100.);
+  //logtimeslewFit->SetParameters(9.45262e+00, -1.94806e+00, 8.81768e+01);
+  //logtimeslewFit->SetParameters(9.45262e+00, -1.94806e+00);
 
   slewFit = new TF1("slewFit","pol4*expo(5)",-10.,14.);
   slewFit->SetParameters(1.07618e-02,-4.19145e-06,2.70310e-05,-8.71584e-08,1.86597e-07,3.59216e+00,-1.02057e-01);
@@ -270,13 +272,13 @@ void Analysis::DoHlt() {
     
   //========================================================================
   // Set the Method 2 Parameters here
-  //psFitOOTpuCorr_->setPUParams(iPedestalConstraint,iTimeConstraint,iAddPulseJitter,iUnConstrainedFit,
-  //iApplyTimeSlew,iTS4Min, iTS4Max, iPulseJitter,iTimeMean,iTimeSig,
-  //				 iPedMean,iPedSig,iNoise,iTMin,iTMax,its3Chi2,its4Chi2,its345Chi2,
-  //				 iChargeThreshold,HcalTimeSlew::Medium, iFitTimes);
+  psFitOOTpuCorr_->setPUParams(iPedestalConstraint,iTimeConstraint,iAddPulseJitter,iUnConstrainedFit,
+			       iApplyTimeSlew,iTS4Min, iTS4Max, iPulseJitter,iTimeMean,iTimeSig,
+			       iPedMean,iPedSig,iNoise,iTMin,iTMax,its3Chi2,its4Chi2,its345Chi2,
+			       iChargeThreshold,HcalTimeSlew::Medium, iFitTimes);
   
   // Now set the Pulse shape type
-  //psFitOOTpuCorr_->setPulseShapeTemplate(theHcalPulseShapes_.getShape(105));
+  psFitOOTpuCorr_->setPulseShapeTemplate(theHcalPulseShapes_.getShape(105));
 
   //Setup HLT pedestal/baseline subtraction module
   pedSubFxn_->Init(((PedestalSub::Method)Baseline), Condition, Threshold, Quantile);
@@ -285,9 +287,9 @@ void Analysis::DoHlt() {
   hltv2_->Init((HcalTimeSlew::ParaSource)Time_Slew, HcalTimeSlew::Medium, (HLTv2::NegStrategy)Neg_Charges, *pedSubFxn_);
 
   //Setup plots for what we care about
-  //int xBins=200, xMin=-10,xMax=40;
+  int xBins=200, xMin=-10,xMax=40;
 
-  /*  TH1D *a3 = new TH1D("a3","", xBins,xMin,xMax);
+  TH1D *a3 = new TH1D("a3","", xBins,xMin,xMax);
   TH1D *a4 = new TH1D("a4","", xBins,xMin,xMax);
   TH1D *a5 = new TH1D("a5","", xBins,xMin,xMax);
 
@@ -299,7 +301,7 @@ void Analysis::DoHlt() {
   TProfile* p45vHLT = new TProfile("p45vHLT", "", xBins,xMin,xMax,-10,10);
 
   TH2D* hM2vHLT = new TH2D("hM2vHLT", "", xBins,xMin,xMax,xBins,xMin,xMax);
-  TProfile *pM2vHLT = new TProfile("pM2vHLT", "", xBins,xMin,xMax,-10,10);*/
+  TProfile *pM2vHLT = new TProfile("pM2vHLT", "", xBins,xMin,xMax,-10,10);
 
   //Loop over all events
   for (int jentry=0; jentry<Entries;jentry++) {
@@ -318,7 +320,7 @@ void Analysis::DoHlt() {
       }
       
       // Begin Method 2
-      //psFitOOTpuCorr_->apply(inputCaloSample,inputPedestal,inputGain,offlineAns);
+      psFitOOTpuCorr_->apply(inputCaloSample,inputPedestal,inputGain,offlineAns);
 
 	//Do Time Slew Parameterization
 	double RatioTS54 = 0, TimeSlew = 0., Pulse = 0.;
@@ -330,7 +332,7 @@ void Analysis::DoHlt() {
       // Begin Online
       hltv2_->apply(inputCaloSample,inputPedestal,hltAns);
 
-      /*      if (hltAns.size()>1) {
+      if (hltAns.size()>1) {
 
 	//Fill Histograms
 	a3->Fill(hltAns.at(0));
@@ -349,10 +351,10 @@ void Analysis::DoHlt() {
 	  pM2vHLT->Fill( offlineAns.at(0)/Gain[j][0], -(hltAns.at(1)*Gain[j][0]-(offlineAns.at(0)))/((offlineAns.at(0))),1);
 	}
       }
-      */
+
     }
   }
-  /*
+
   TCanvas *c1 = new TCanvas("c1", "c1", 800, 600);
   gStyle->SetOptStat(0);
 
@@ -427,7 +429,7 @@ void Analysis::DoHlt() {
   pM2vHLT->GetYaxis()->SetRangeUser(-1,1);
   pM2vHLT->Draw();
   c1->SaveAs(TString(Plot_Dir.c_str())+"/pM2vHLT.png");
-  */
+
 }
 
 void Analysis::MakePedestalPlots() {
@@ -881,10 +883,10 @@ void Analysis::Finish()
 
   gStyle->SetOptFit(1);
   TimeSlewPulse_All->Draw("BOX");
-  TimeSlewPulse_All->ProfileY("Fit Y Profile",1,-1,"do")->Fit("logtimeslewFit");
+  TimeSlewPulse_All->ProfileY("Fit Y Profile",1,-1,"dos")->Fit("logtimeslewFit");
 
-  TimeSlewPulse_HB->ProfileY("HBFit Y Profile",1,-1,"do")->Fit("logtimeslewFit");
-  TimeSlewPulse_HE->ProfileY("HEFit Y Profile",1,-1,"do")->Fit("logtimeslewFit");
+  TimeSlewPulse_HB->ProfileY("HBFit Y Profile",1,-1,"dos")->Fit("logtimeslewFit");
+  TimeSlewPulse_HE->ProfileY("HEFit Y Profile",1,-1,"dos")->Fit("logtimeslewFit");
   
   fout->cd();
   fout->Write();

@@ -52,11 +52,19 @@ void HLTv2::apply(const std::vector<double> & inputCharge, const std::vector<dou
     ch5=(i4*corrCharge[5]-n4*corrCharge[4])/(i4*i5);
   }
   
-  if (ch5<-3 && fNegStrat==HLTv2::ReqPos) {
-    //std::cout << "original ch4: " << ch4 << ", ch5: " << ch5 << std::endl;
+  if (ch5<-3 && ch4>15 && fNegStrat==HLTv2::ReqPos) {
     ch4=ch4+(ch5+3);
     ch5=-3;
-    //std::cout << "new ch4: " << ch4 << ", ch5: " << ch5 << std::endl;
+  }
+
+  if (ch3<1 && fNegStrat==HLTv2::ReqPos) {
+    ch3=0;
+  }
+  if (ch4<1 && fNegStrat==HLTv2::ReqPos) {
+    ch4=0;
+  }
+  if (ch5<1 && fNegStrat==HLTv2::ReqPos) {
+    ch5=0;
   }
 
   HLTOutput.clear();
@@ -110,26 +118,6 @@ void HLTv2::getLandauFrac(Float_t tStart, Float_t tEnd, Float_t &sum) const{
   }
   sum=landauFrac[int(ceil(tStart+25))];
   return;
-  /*
-  // can be further optimized to reduce computational time
-  if (tStart==0 && tEnd==25) {
-    sum=0.613668;
-    return;
-  }
-  else if (tStart==0 && tEnd==50) {
-    sum=0.853668;
-    return;
-  }
-
-  Float_t landauFrac[100] = { 7.6377e-05, 0.000342278, 0.00111827, 0.00283151, 0.00583919, 0.0102101, 0.0156382, 0.0215401, 0.0272533, 0.0322193, 0.036083, 0.0387059, 0.0401229, 0.0404802, 0.0399773, 0.0388241, 0.0372142, 0.0353118, 0.0332481, 0.0311228, 0.029008, 0.0269535, 0.0249918, 0.023142, 0.0214139, 0.0198106, 0.0183306, 0.0169693, 0.0157203, 0.0145765, 0.0135299, 0.0125729, 0.0116979, 0.0108976, 0.0101654, 0.00949491, 0.00888051, 0.00831695, 0.00779945, 0.00732371, 0.00688584, 0.00648234, 0.00611004, 0.0057661, 0.00544794, 0.00515327, 0.00488, 0.00462627, 0.00439037, 0.0041708, 0.00396618, 0.00377526, 0.00359691, 0.00343013, 0.00327399, 0.00312765, 0.00299034, 0.00286138, 0.00274014, 0.00262604, 0.00251856, 0.00241722, 0.00232157, 0.00223122, 0.0021458, 0.00206497, 0.00198842, 0.00191587, 0.00184705, 0.00178172, 0.00171965, 0.00166064, 0.0016045, 0.00155105, 0.00150013, 0.00145159, 0.00140527, 0.00136107, 0.00131884, 0.00127848, 0.00123989, 0.00120296, 0.0011676, 0.00113373, 0.00110126, 0.00107013, 0.00104026, 0.00101159, 0.000984047, 0.000957586, 0.000932148, 0.000907681, 0.00088414, 0.000861478, 0.000839653, 0.000818625, 0.000798357, 0.000778814, 0.000759962 };
-
-  sum=0;
-  for (Int_t i=int(ceil(tStart)); i<int(ceil(tEnd)); i++) {
-    if (i<0) sum+=0;
-    else sum+=landauFrac[i];
-  }
-  return;
-  */
 }
 
 void HLTv2::PulseFraction(Double_t fC, Double_t *TS46) const{
@@ -139,7 +127,7 @@ void HLTv2::PulseFraction(Double_t fC, Double_t *TS46) const{
   static Double_t TS5par[3] = {0.258, 0.0178, 4.786e-4}; // pol2 parameters for the TS5 fraction                                       
   static Double_t TS6par[4] = {0.06391, 0.002737, 8.396e-05, 1.475e-06};// pol3 parameters for the TS6 fraction                        
 
-  Double_t tslew = HcalTimeSlew::delay(fC,HcalTimeSlew::MC,fTimeSlewBias);
+  Double_t tslew = -HcalTimeSlew::delay(fC,HcalTimeSlew::MC,fTimeSlewBias);
 
   TS46[0] = TS4par[0] * TMath::Gaus(tslew,TS4par[1],TS4par[2]); // fraction of pulse in the TS4                                        
   TS46[1] = TS5par[0] + TS5par[1]*tslew + TS5par[2]*tslew*tslew; // fraction of pulse in the T5S                                       

@@ -22,6 +22,8 @@ double HcalTimeSlew::delay(double fC, ParaSource source, BiasSetting bias) {
   else if (source==MC) {
     //from xinmei 2/24
     return 9.453-1.948*log(fC+88.18);
+    //return 928-97.2*log(fC+13937);
+    //return 8.77-2.02*log(fC);
   }
   else if (source==MCShift) {
     //from xinmei 2/24
