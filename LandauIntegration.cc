@@ -21,147 +21,189 @@
 
 #include "TTree.h"
 #include "TCanvas.h"
-
+#include "TGraph.h"
 #include "HttStyles.h"
 
 #endif
+double delay1(double fC);
+double delay2(double fC);
+
+void getLandauFrac(Float_t tStart, Float_t tEnd, Float_t &sum);
+
+void PulseFraction(Double_t fC, Double_t *TS46);
+double Det2(double *b, double *c);
+double Det3(double *a, double *b, double *c);
 
 void LandauIntegration() {
 
-  TCanvas *c1 = MakeCanvas("c1", "c1", 800, 600);
-
-  //Float_t intCharge[10] = {4.84858, 2.05987, 4.97552, 2.38107, 17.8341, 13.292, 7.22145, 4.62927, 7.10693, 3.18308};
-
-  //Landau pulse shape from https://indico.cern.ch/event/345283/contribution/3/material/slides/0.pdf
-  //Landau turn on by default at left edge of time slice 
-
-  Float_t timeSlewShift=10;
-
-  // normalized to: cout << pulse_shape->Integral(-25,10000) << endl;
-  TF1* pulse_shape = new TF1("pulse_shape","[0]*TMath::Landau((x+[1]),[2],[3])",-50,100);
-  pulse_shape->SetParameter(0,1/4.458);
-  pulse_shape->SetParameter(1,timeSlewShift);
+  TF1* pulse_shape= new TF1("pulse_shape", "[0]*TMath::Landau((x+[1]),[2],[3])",-50,10000);
+  pulse_shape->SetParameter(0,1.0);
+  pulse_shape->SetParameter(1,0);
   pulse_shape->SetParameter(2,14.36);
   pulse_shape->SetParameter(3,4.46);
 
-  pulse_shape->SetTitle("");
-  pulse_shape->GetXaxis()->SetTitle("Time");
-  pulse_shape->GetYaxis()->SetTitle("Charge");
+  cout <<  pulse_shape->Integral(0,10000) << endl;
+  cout <<  pulse_shape->Integral(0,100) << endl;
+  cout << 1/(pulse_shape->Integral(0,10000)/pulse_shape->Integral(0,100)) << endl;
+    
+  //TCanvas *c1 = MakeCanvas("c1", "c1", 800, 600);
 
-  pulse_shape->Draw("");
+  //TGraph *niFrac = new TGraph(200);
+  //TGraph *parFrac = new TGraph(200); 
 
-  TF1* ts0 = new TF1("pulse_shape","[0]*TMath::Landau((x+[1]),[2],[3])",-25,0);
-  TF1* ts1 = new TF1("pulse_shape","[0]*TMath::Landau((x+[1]),[2],[3])",0,25);
-  TF1* ts2 = new TF1("pulse_shape","[0]*TMath::Landau((x+[1]),[2],[3])",25,50);
-  TF1* ts3 = new TF1("pulse_shape","[0]*TMath::Landau((x+[1]),[2],[3])",50,75);
+  Double_t charges[10]={-0.0373423, 1.25702, -0.321804, -1.19814, 11.9322, 3.4333, 2.96879, -0.107635, 2.13894, -0.919258};
+  //Double_t charges[10]={-0.118811, -0.381584, 0.705285, -1.96923, 5.44974, 2.96178, -0.417049, -0.859477, -0.118811, -0.381584};
+  //Double_t charges[10]={0.283782, 0.0382726, 0.43603, -1.27933, 2.48983, 1.14717, 0.43603, -1.27933, 0.283782, 1.14717};
+  //cout << "{";
+  //for (Int_t k=-25; k<100; k++) {
+    //Float_t tsShift=delay2(k/2)-2;
+    //Float_t tsShift=k;
+    //cout << "-------" << endl;
+    //cout << "charge: " << k << endl;
+    //cout << "time slew corr: " << tsShift << endl;
+    //Float_t i=0;
+    //getLandauFrac(tsShift,25+tsShift,i);
+    //cout << i << ", ";
+    //Float_t n=0;
+    //getLandauFrac(25+tsShift,50+tsShift,n);
+    //cout << "intime fraction: " << i << endl;
+    //cout << "next fraction:   " << n << endl;
+    //cout << k/2 << " " << tsShift << " " << i << endl;
+    //niFrac->SetPoint(k,k,i);
 
-  ts0->SetParameter(0,1/4.458);
-  ts0->SetParameter(1,timeSlewShift);
-  ts0->SetParameter(2,14.36);
-  ts0->SetParameter(3,4.46);
+    //double TS35[3];
+    //PulseFraction(k, TS35);
+    //parFrac->SetPoint(k,k,TS35[0]);
+  //}
+  //cout << "}" << endl;
 
-  ts1->SetParameter(0,1/4.458);
-  ts1->SetParameter(1,timeSlewShift);
-  ts1->SetParameter(2,14.36);
-  ts1->SetParameter(3,4.46);
+  /*  niFrac->Draw();
+  niFrac->GetYaxis()->SetRangeUser(0.55,0.75);
+  //niFrac->GetYaxis()->SetRangeUser(0.1,0.3);
+  niFrac->GetXaxis()->SetTitle("Charge");
+  niFrac->GetYaxis()->SetTitle("In-time fraction");
+  parFrac->SetMarkerColor(kRed);
+  parFrac->Draw("same p");*/
 
-  ts2->SetParameter(0,1/4.458);
-  ts2->SetParameter(1,timeSlewShift);
-  ts2->SetParameter(2,14.36);
-  ts2->SetParameter(3,4.46);
+  Float_t tsShift3=delay1(charges[3]);
+  Float_t tsShift4=delay1(charges[4]);
+  Float_t tsShift5=delay1(charges[5]);
 
-  ts3->SetParameter(0,1/4.458);
-  ts3->SetParameter(1,timeSlewShift);
-  ts3->SetParameter(2,14.36);
-  ts3->SetParameter(3,4.46);
+  Float_t i3=0;
+  getLandauFrac(tsShift3,tsShift3+25,i3);
+  Float_t n3=0;
+  getLandauFrac(tsShift3+25,tsShift3+50,n3);
 
-  pulse_shape->SetLineColor(kBlack);
-  pulse_shape->SetLineWidth(3);
-  ts0->SetLineColor(kBlack);
-  ts1->SetLineColor(kBlack);
-  ts2->SetLineColor(kBlack);
-  ts3->SetLineColor(kBlack);
-  ts0->SetFillColor(kBlack);
+  Float_t i4=0;
+  getLandauFrac(tsShift4,tsShift4+25,i4);
+  Float_t n4=0;
+  getLandauFrac(tsShift4+25,tsShift4+50,n4);
 
-  ts0->SetFillColor(kYellow-7);
-  //ts0->SetLineColor(kYellow-7);
-  ts0->SetFillStyle(1001);
-  //ts1->SetLineColor(kGreen-7);
-  ts1->SetFillColor(kGreen-7);
-  ts1->SetFillStyle(1001);
-  //ts2->SetLineColor(kCyan-9);
-  ts2->SetFillColor(kCyan-9);
-  ts2->SetFillStyle(1001);
-  //ts3->SetLineColor(kViolet-9);
-  ts3->SetFillColor(kViolet-9);
-  ts3->SetFillStyle(1001);
+  Float_t i5=0;
+  getLandauFrac(tsShift5,tsShift5+25,i5);
+  Float_t n5=0;
+  getLandauFrac(tsShift5+25,tsShift5+50,n5);
 
-  ts0->Draw("same");
-  ts1->Draw("same");
-  ts2->Draw("same");
-  ts3->Draw("same");
+  Float_t ch3=charges[3]/i3;
+  Float_t ch4=(i3*charges[4]-n3*charges[3])/(i3*i4);
+  Float_t ch5=(n3*n4*charges[3]-i3*n4*charges[4]+i3*i4*charges[5])/(i3*i4*i5);
 
-  pulse_shape->Draw("same l");
+  double TS35[3];
+  double TS46[3];
+  double TS57[3];
+  cout << "call on charge 3" << endl;
+  PulseFraction(charges[3], TS35);
+  cout << "call on charge 4" << endl;
+  PulseFraction(charges[4], TS46);
+  cout << "call on charge 5" << endl;
+  PulseFraction(charges[5], TS57);
+ 
+  cout << "TS 3 PULSE" << endl;
+  cout << i3 << " " << TS35[0] << endl;
+  cout << n3 << " " << TS35[1] << endl;
+  cout << " 0 " << TS35[2] << endl;
 
-  c1->SaveAs("landau_with_slew_shift.png");
-
-  /*  cout << "{ ";
-  for (Int_t i=0; i<99; i++) {
-    cout << pulse_shape->Integral(i,i+1) << ", ";
-
-  }
-  cout << "}";*/
-  /*
-  Float_t landauFrac[100] = { 7.6377e-05, 0.000342278, 0.00111827, 0.00283151, 0.00583919, 0.0102101, 0.0156382, 0.0215401, 0.0272533, 0.0322193, 0.036083, 0.0387059, 0.0401229, 0.0404802, 0.0399773, 0.0388241, 0.0372142, 0.0353118, 0.0332481, 0.0311228, 0.029008, 0.0269535, 0.0249918, 0.023142, 0.0214139, 0.0198106, 0.0183306, 0.0169693, 0.0157203, 0.0145765, 0.0135299, 0.0125729, 0.0116979, 0.0108976, 0.0101654, 0.00949491, 0.00888051, 0.00831695, 0.00779945, 0.00732371, 0.00688584, 0.00648234, 0.00611004, 0.0057661, 0.00544794, 0.00515327, 0.00488, 0.00462627, 0.00439037, 0.0041708, 0.00396618, 0.00377526, 0.00359691, 0.00343013, 0.00327399, 0.00312765, 0.00299034, 0.00286138, 0.00274014, 0.00262604, 0.00251856, 0.00241722, 0.00232157, 0.00223122, 0.0021458, 0.00206497, 0.00198842, 0.00191587, 0.00184705, 0.00178172, 0.00171965, 0.00166064, 0.0016045, 0.00155105, 0.00150013, 0.00145159, 0.00140527, 0.00136107, 0.00131884, 0.00127848, 0.00123989, 0.00120296, 0.0011676, 0.00113373, 0.00110126, 0.00107013, 0.00104026, 0.00101159, 0.000984047, 0.000957586, 0.000932148, 0.000907681, 0.00088414, 0.000861478, 0.000839653, 0.000818625, 0.000798357, 0.000778814,0.000759962 };
-
-  Float_t tStart=0.5, tEnd=25.5;
+  cout << "TS 4 PULSE" << endl;
+  cout << i4 << " " << TS46[0] << endl;
+  cout << n4 << " " << TS46[1] << endl;
+  cout << " 0 " << TS46[2] << endl;
   
-  cout << std::int(std::ceil(tStart)) << ", " << std::int(std::ceil(tEnd)) << endl;
-  Float_t sum=0;
-  for (Int_t i=std::int(std::ceil(tStart)); i<std::int(std::ceil(tEnd)); i++) {
-    sum+=landauFrac[i];
-  }
-  cout <<  sum << endl;
+  cout << "TS 5 PULSE" << endl;
+  cout << i5 << " " << TS57[0] << endl;
+  cout << n5 << " " << TS57[1] << endl;
+  cout << " 0 " << TS57[2] << endl;
 
-  cout << pulse_shape->Integral(0,25) << endl;
-  cout << pulse_shape->Integral(25,50) << endl;*/
-/*
-  //Float_t totalCharge=pulse_shape->Integral(-25,10000);
-  //cout << totalCharge << endl;
-  // fraction of Landau pulse falling in "in time" time slice
-  Float_t fracLandauPREV = pulse_shape->Integral(-25,0)/totalCharge;
-  Float_t fracLandauIT = pulse_shape->Integral(0,25)/totalCharge;
-  // fraction of Landau pulse falling in "next" time slice
-  Float_t fracLandauNEXT = pulse_shape->Integral(25,50)/totalCharge;
-  // fraction of Landau pulse falling in "in time"+"next" time slice
-  Float_t fracLandauITNEXT = pulse_shape->Integral(0,50)/totalCharge;
-  
-  cout << "Integrated charge assuming one pulse at T3: " << endl;
-  cout << " No correction: " << intCharge[3] << endl;
-  cout << " Contribution in TS4: " << intCharge[3]*fracLandauNEXT/fracLandauIT << endl;
-  Float_t contribPREV=intCharge[3]*fracLandauNEXT/fracLandauIT;
+  double a3[3] = {TS35[0], TS35[1], TS35[2]};
+  double b3[3] = {0., TS46[0], TS46[1]};
+  double c3[3] = {0., 0., TS57[0]};
+  double d3[3] = {charges[3], charges[4], charges[5]};
 
-  cout << "Integrated charge assuming one pulse at T6: " << endl;
-  cout << " No correction: " << intCharge[6] << endl;
-  cout << " Expected contribution in T5: " << intCharge[6]*fracLandauPREV/fracLandauIT << endl;
-  Float_t contribNN=intCharge[6]*fracLandauPREV/fracLandauIT;
+  double deno3 = Det3(a3, b3, c3);
 
-  cout << "Integrated charge in T5: " << endl;
-  cout << " No correction: " << intCharge[5] << endl;
-  cout << " With Subtraction from T6: " <<  intCharge[5]-contribNN << endl;
+  double A3 = Det3(d3, b3, c3) / deno3;
+  double A4 = Det3(a3, d3, c3) / deno3;
+  double A5 = Det3(a3, b3, d3) / deno3;
 
-  cout << "Integrated charge in T4: " << endl;
-  cout << " No correction: " << intCharge[4] << endl;
-  cout << " With subtraction from T3: " << intCharge[4]-contribPREV << endl;
-
-  cout << "Total charge from T4: " << intCharge[4]+intCharge[5]-contribNN-contribPREV << endl;
-
-  cout << "Frac IT/NEXT: " << fracLandauIT/fracLandauNEXT << endl;
-  cout << "Calculated: " << (intCharge[4]-contribPREV)/(intCharge[5]-contribNN) << endl;
-
+  cout << "SOLUTION" << endl;
+  cout << ch3 << " " << A3 << endl;
+  cout << ch4 << " " << A4 << endl;
+  cout << ch5 << " " << A5 << endl;
 
 }
 
-double getLandauFrac(Float_t tStart, Float_t tEnd) const{
-*/
+double delay1(double fC) {
+  //double rawDelay=13.307784-1.556668*log(fC);
+  //return (rawDelay<0)?(0):((rawDelay>10)?(10):(rawDelay));
+  return 13.7436-1.57*log(fC+28);
+}
+
+double delay2(double fC) {
+  return 9.453-1.948*log(fC+88.18);
+}
+
+// Landau function integrated in 1 ns intervals
+//Landau pulse shape from https://indico.cern.ch/event/345283/contribution/3/material/slides/0.pdf
+//Landau turn on by default at left edge of time slice 
+// normalized to 1 on [0,10000]
+void getLandauFrac(Float_t tStart, Float_t tEnd, Float_t &sum) {
+
+  Float_t landauFrac[125] = {0, 7.6377e-05, 0.000418655, 0.00153692, 0.00436844, 0.0102076, 0.0204177, 0.0360559, 0.057596, 0.0848493, 0.117069, 0.153152, 0.191858, 0.23198, 0.272461, 0.312438, 0.351262, 0.388476, 0.423788, 0.457036, 0.488159, 0.517167, 0.54412, 0.569112, 0.592254, 0.613668, 0.633402, 0.651391, 0.667242, 0.680131, 0.688868, 0.692188, 0.689122, 0.67928, 0.662924, 0.64087, 0.614282, 0.584457, 0.552651, 0.51997, 0.487317, 0.455378, 0.424647, 0.395445, 0.367963, 0.342288, 0.318433, 0.29636, 0.275994, 0.257243, 0.24, 0.224155, 0.2096, 0.196227, 0.183937, 0.172635, 0.162232, 0.15265, 0.143813, 0.135656, 0.128117, 0.12114, 0.114677, 0.108681, 0.103113, 0.0979354, 0.0931145, 0.0886206, 0.0844264, 0.0805074, 0.0768411, 0.0734075, 0.0701881, 0.0671664, 0.0643271, 0.0616564, 0.0591418, 0.0567718, 0.054536, 0.0524247, 0.0504292, 0.0485414, 0.046754, 0.0450602, 0.0434538, 0.041929, 0.0404806, 0.0391037, 0.0377937, 0.0365465, 0.0353583, 0.0342255, 0.0331447, 0.032113, 0.0311274, 0.0301854, 0.0292843, 0.0284221, 0.0275964, 0.0268053, 0.0253052, 0.0238536, 0.0224483, 0.0210872, 0.0197684, 0.0184899, 0.01725, 0.0160471, 0.0148795, 0.0137457, 0.0126445, 0.0115743, 0.0105341, 0.00952249, 0.00853844, 0.00758086, 0.00664871, 0.00574103, 0.00485689, 0.00399541, 0.00315576, 0.00233713, 0.00153878, 0.000759962, 0 };
+
+  // can be further optimized to reduce computational time
+  if (abs(tStart-tEnd)!=25) {
+    sum=0;
+    return;
+  }
+  sum=landauFrac[int(ceil(tStart+25))];
+  return;
+
+}
+
+void PulseFraction(Double_t fC, Double_t *TS46) {
+  
+  //static Double_t TS3par[3] = {0.44, -18.6, 5.136}; //Gaussian parameters: norm, mean, sigma for the TS3 fraction  
+  static Double_t TS4par[3] = {0.71, -5.17, 12.23}; //Gaussian parameters: norm, mean, sigma for the TS4 fraction
+  static Double_t TS5par[3] = {0.258, 0.0178, 4.786e-4}; // pol2 parameters for the TS5 fraction
+  static Double_t TS6par[4] = {0.06391, 0.002737, 8.396e-05, 1.475e-06};// pol3 parameters for the TS6 fraction
+  
+  Double_t tslew = -delay1(fC);
+  cout << "time slew: " << tslew << endl;
+  
+  TS46[0] = TS4par[0] * TMath::Gaus(tslew,TS4par[1],TS4par[2]); // fraction of pulse in the TS4
+  cout << "intime fraction: " << TS46[0] << endl;
+  TS46[1] = TS5par[0] + TS5par[1]*tslew + TS5par[2]*tslew*tslew; // fraction of pulse in the T5S
+  cout << "next fraction:   " << TS46[1] << endl;
+  TS46[2] = TS6par[0] + TS6par[1]*tslew + TS6par[2]*tslew*tslew + TS6par[3]*tslew*tslew*tslew; //fraction of pulse in the TS6
+
+  cout << fC << " " << tslew << " " << TS46[0] << endl;
+  
+  return;
+}
+
+double Det2(double *b, double *c){
+  return b[1]*c[2]-b[2]*c[1];
+}
+
+double Det3(double *a, double *b, double *c){
+  return a[0]*(b[1]*c[2]-b[2]*c[1])-a[1]*(b[0]*c[2]-b[2]*c[0])+a[2]*(b[0]*c[1]-b[1]*c[0]);
 }

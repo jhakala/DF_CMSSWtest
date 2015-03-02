@@ -55,9 +55,9 @@ class Analysis : public analysistree
   float Threshold;
   float Quantile;
 
-  TH2F *TimeSlewPulse_All;
-  TH2F *TimeSlewPulse_HB;
-  TH2F *TimeSlewPulse_HE;
+  TH2D *TimeSlewPulse_All;
+  TH2D *TimeSlewPulse_HB;
+  TH2D *TimeSlewPulse_HE;
 
   TF1 *slewFit;
   TF1 *logtimeslewFit;
@@ -75,6 +75,7 @@ class Analysis : public analysistree
   void MakePedestalPlots();
   void DoHlt();
   void MakeTimeSlewPlots();
+  void MakeTimeSlewParam();
 
   void useMethod2(){psFitOOTpuCorr_ = std::auto_ptr<PulseShapeFitOOTPileupCorrection>(new PulseShapeFitOOTPileupCorrection()); }
   std::auto_ptr<PedestalSub> pedSubFxn_= std::auto_ptr<PedestalSub>(new PedestalSub());

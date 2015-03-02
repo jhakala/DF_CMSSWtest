@@ -68,7 +68,9 @@ double PedestalSub::GetCorrection(const std::vector<double> & inputCharge, const
       if ( (inputCharge[i]-inputPedestal[i])<fThreshold) {
 	baseline+=(inputCharge[i]-inputPedestal[i]);
       }
-      else baseline+=fThreshold;
+      else {
+	baseline+=fThreshold;
+      }
     }
     baseline/=8;
   }
