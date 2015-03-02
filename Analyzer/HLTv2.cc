@@ -53,11 +53,19 @@ void HLTv2::apply(const std::vector<double> & inputCharge, const std::vector<dou
     ch5=(i4*corrCharge[5]-n4*corrCharge[4])/(i4*i5);
   }
   
-  if (ch5<-3 && fNegStrat==HLTv2::ReqPos) {
-    //std::cout << "original ch4: " << ch4 << ", ch5: " << ch5 << std::endl;
+  if (ch5<-3 && ch4>15 && fNegStrat==HLTv2::ReqPos) {
     ch4=ch4+(ch5+3);
     ch5=-3;
-    //std::cout << "new ch4: " << ch4 << ", ch5: " << ch5 << std::endl;
+  }
+
+  if (ch3<1 && fNegStrat==HLTv2::ReqPos) {
+    ch3=0;
+  }
+  if (ch4<1 && fNegStrat==HLTv2::ReqPos) {
+    ch4=0;
+  }
+  if (ch5<1 && fNegStrat==HLTv2::ReqPos) {
+    ch5=0;
   }
 
   if (ch4<1 && fNegStrat==HLTv2::ReqPos) {

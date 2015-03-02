@@ -60,13 +60,14 @@ class Analysis : public analysistree
   TH2D *TimeSlewPulse_HE;
 
   TF1 *slewFit;
-  TF1 *logtimeslewFit;
+  TF1 *timeslewFit;
 
   Analysis(TTree *tree);
   ~Analysis();
 
   void Init(char* paramfile);
   void DefineHistograms();
+  void TSP();
   void Process();
   void MakeCutflow();
   void FillHistograms();
@@ -82,6 +83,7 @@ class Analysis : public analysistree
          
  private:
   TFile *fout;
+  TFile *fTSP;
   std::auto_ptr<PulseShapeFitOOTPileupCorrection> psFitOOTpuCorr_= std::auto_ptr<PulseShapeFitOOTPileupCorrection>(new PulseShapeFitOOTPileupCorrection());
   std::auto_ptr<HLTv2> hltv2_= std::auto_ptr<HLTv2>(new HLTv2());
   std::auto_ptr<TimeSlewPar> TimeSlewParameters = std::auto_ptr<TimeSlewPar>(new TimeSlewPar());

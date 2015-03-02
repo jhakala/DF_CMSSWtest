@@ -102,6 +102,7 @@ int main(int argc, char **argv)
 
   Ana25ns.Init(argv[1]);
   Ana25ns.DefineHistograms();
+  Ana25ns.TSP();
   Ana25ns.Process();
   Ana25ns.Finish();
   }
@@ -212,14 +213,68 @@ void Analysis::Process() {
 
   fout = new TFile(Output_File.c_str(), "RECREATE");
 
-  //DoHlt();
-  //MakeTimeSlewPlots();
+  DoHlt();
+  MakeTimeSlewPlots();
   //MakePedestalPlots();
   MakeTimeSlewParam();  
 }
- 
+
 void Analysis::DefineHistograms()
 {
+
+}
+ 
+void Analysis::TSP()
+{
+  TimeSlewPulse_All = new TH2F("TimeSlewPulse_All","Time Slew [ns] vs Charge in TS4 [fC]",25,-14.5,10.5,100,0.,1000.);
+  TimeSlewPulse_All->Sumw2();
+  TimeSlewPulse_HB = new TH2F("TimeSlewPulse_HB","Time Slew [ns] vs Charge in TS4 [fC] in HB",25,-14.5,10.5,100,0.,1000.);
+  TimeSlewPulse_HB->Sumw2();
+  TimeSlewPulse_HE = new TH2F("TimeSlewPulse_HE","Time Slew [ns] vs Charge in TS4 [fC] in HE",25,-14.5,10.5,100,0.,1000.);
+  TimeSlewPulse_HE->Sumw2();
+
+  //Logrithmic
+  timeslewFit = new TF1("timeslewFit", "[0]+[1]*TMath::Log(x+[2])",0.,1000.);
+  timeslewFit->SetParameters(9.27591e+02,-9.71576e+01, 1.39366e+04);
+
+  //Linear
+  //  timeslewFit = new TF1("timeslewFit", "[0]+[1]*x",0.,1000.);
+  //  timeslewFit->SetParameters(4.61732e-01,-6.77490e-03);
+
+  slewFit = new TF1("slewFit","pol4*expo(5)",-10.,14.);
+  slewFit->SetParameters(1.07618e-02,-4.19145e-06,2.70310e-05,-8.71584e-08,1.86597e-07,3.59216e+00,-1.02057e-01);
+
+  fTSP = new TFile("TSP.root", "RECREATE");
+  pedSubFxn_->Init(((PedestalSub::Method)Baseline), Condition, Threshold, Quantile);
+
+  if (Entries==-1) Entries=fChain->GetEntries();
+  for (int jentry=0; jentry<Entries;jentry++) {
+    fChain->GetEntry(jentry);
+    for (int j = 0; j < (int)PulseCount; j++) {
+      std::vector<double> inputCaloSample, inputPedestal, inputGain;
+      for (int i=0; i<10; i++) {
+        inputCaloSample.push_back(Charge[j][i]+Pedestal[j][i]);
+        inputPedestal.push_back(Pedestal[j][i]);
+        inputGain.push_back(Gain[j][i]);
+      }
+
+    double RatioTS54 = 0, TimeSlew = 0., Pulse = 0.;
+    TimeSlewParameters->getParameters(inputCaloSample, inputPedestal, RatioTS54, TimeSlew, Pulse, slewFit, *pedSubFxn_);
+    TimeSlewPulse_All->Fill(TimeSlew, Pulse);
+    if(IEta[j] < 16) TimeSlewPulse_HB->Fill(TimeSlew, Pulse);
+    if(IEta[j] >= 16) TimeSlewPulse_HE->Fill(TimeSlew, Pulse);
+    }
+  }
+  gStyle->SetOptFit(1);
+  TimeSlewPulse_All->Draw("BOX");
+  TimeSlewPulse_All->ProfileY("Fit Y Profile",1,-1,"dos")->Fit("timeslewFit");
+  timeslewFit->Write();
+  TimeSlewPulse_HB->ProfileY("HBFit Y Profile",1,-1,"dos")->Fit("timeslewFit");
+  TimeSlewPulse_HE->ProfileY("HEFit Y Profile",1,-1,"dos")->Fit("timeslewFit");
+
+  fTSP->cd();
+  fTSP->Write();
+  fTSP->Close();
 
 }
 
@@ -262,13 +317,13 @@ void Analysis::DoHlt() {
     
   //========================================================================
   // Set the Method 2 Parameters here
-  //psFitOOTpuCorr_->setPUParams(iPedestalConstraint,iTimeConstraint,iAddPulseJitter,iUnConstrainedFit,
-  //iApplyTimeSlew,iTS4Min, iTS4Max, iPulseJitter,iTimeMean,iTimeSig,
-  //				 iPedMean,iPedSig,iNoise,iTMin,iTMax,its3Chi2,its4Chi2,its345Chi2,
-  //				 iChargeThreshold,HcalTimeSlew::Medium, iFitTimes);
+  psFitOOTpuCorr_->setPUParams(iPedestalConstraint,iTimeConstraint,iAddPulseJitter,iUnConstrainedFit,
+			       iApplyTimeSlew,iTS4Min, iTS4Max, iPulseJitter,iTimeMean,iTimeSig,
+			       iPedMean,iPedSig,iNoise,iTMin,iTMax,its3Chi2,its4Chi2,its345Chi2,
+			       iChargeThreshold,HcalTimeSlew::Medium, iFitTimes);
   
   // Now set the Pulse shape type
-  //psFitOOTpuCorr_->setPulseShapeTemplate(theHcalPulseShapes_.getShape(105));
+  psFitOOTpuCorr_->setPulseShapeTemplate(theHcalPulseShapes_.getShape(105));
 
   //Setup HLT pedestal/baseline subtraction module
   pedSubFxn_->Init(((PedestalSub::Method)Baseline), Condition, Threshold, Quantile);
@@ -277,9 +332,9 @@ void Analysis::DoHlt() {
   hltv2_->Init((HcalTimeSlew::ParaSource)Time_Slew, HcalTimeSlew::Medium, (HLTv2::NegStrategy)Neg_Charges, *pedSubFxn_);
 
   //Setup plots for what we care about
-  //int xBins=200, xMin=-10,xMax=40;
+  int xBins=200, xMin=-10,xMax=40;
 
-  /*  TH1D *a3 = new TH1D("a3","", xBins,xMin,xMax);
+  TH1D *a3 = new TH1D("a3","", xBins,xMin,xMax);
   TH1D *a4 = new TH1D("a4","", xBins,xMin,xMax);
   TH1D *a5 = new TH1D("a5","", xBins,xMin,xMax);
 
@@ -291,7 +346,7 @@ void Analysis::DoHlt() {
   TProfile* p45vHLT = new TProfile("p45vHLT", "", xBins,xMin,xMax,-10,10);
 
   TH2D* hM2vHLT = new TH2D("hM2vHLT", "", xBins,xMin,xMax,xBins,xMin,xMax);
-  TProfile *pM2vHLT = new TProfile("pM2vHLT", "", xBins,xMin,xMax,-10,10);*/
+  TProfile *pM2vHLT = new TProfile("pM2vHLT", "", xBins,xMin,xMax,-10,10);
 
   //Loop over all events
   for (int jentry=0; jentry<Entries;jentry++) {
@@ -310,20 +365,13 @@ void Analysis::DoHlt() {
       }
       
       // Begin Method 2
-      //psFitOOTpuCorr_->apply(inputCaloSample,inputPedestal,inputGain,offlineAns);
-
-	//Do Time Slew Parameterization
-      /*	double RatioTS54 = 0, TimeSlew = 0., Pulse = 0.;
-	TimeSlewParameters->getParameters(inputCaloSample, inputPedestal, RatioTS54, TimeSlew, Pulse, slewFit, *pedSubFxn_);
-	TimeSlewPulse_All->Fill(TimeSlew, Pulse);
-	if(IEta[j] < 16) TimeSlewPulse_HB->Fill(TimeSlew, Pulse);
-	if(IEta[j] >= 16) TimeSlewPulse_HE->Fill(TimeSlew, Pulse);*/
+      psFitOOTpuCorr_->apply(inputCaloSample,inputPedestal,inputGain,offlineAns);
 
       // Begin Online
       hltv2_->apply(inputCaloSample,inputPedestal,hltAns);
       //hltv2_->applyXM(inputCaloSample,inputPedestal,hltAns);
 
-      /*      if (hltAns.size()>1) {
+      if (hltAns.size()>1) {
 
 	//Fill Histograms
 	a3->Fill(hltAns.at(0));
@@ -342,10 +390,10 @@ void Analysis::DoHlt() {
 	  pM2vHLT->Fill( offlineAns.at(0)/Gain[j][0], -(hltAns.at(1)*Gain[j][0]-(offlineAns.at(0)))/((offlineAns.at(0))),1);
 	}
       }
-      */
+
     }
   }
-  /*
+
   TCanvas *c1 = new TCanvas("c1", "c1", 800, 600);
   gStyle->SetOptStat(0);
 
@@ -420,7 +468,7 @@ void Analysis::DoHlt() {
   pM2vHLT->GetYaxis()->SetRangeUser(-1,1);
   pM2vHLT->Draw();
   c1->SaveAs(TString(Plot_Dir.c_str())+"/pM2vHLT.png");
-  */
+
 }
 
 void Analysis::MakePedestalPlots() {
@@ -928,87 +976,6 @@ void Analysis::MakeTimeSlewPlots() {
 }
 
 void Analysis::MakeTimeSlewParam() {
-
-  //pedestal subtraction only; no baseline
-  pedSubFxn_->Init(((PedestalSub::Method)0), Condition, 0.0, 0.0);
-
-  //TimeSlewPulse_All = new TH2F("TimeSlewPulse_All","Time Slew [ns] vs Charge in TS4 [fC]",25,-50,50,100,0,500.);
-  TimeSlewPulse_All = new TH2D("TimeSlewPulse_All", "",50,0,500,50,0,1);
-  TimeSlewPulse_All->Sumw2();
-  TimeSlewPulse_HB = new TH2D("TimeSlewPulse_HB","Time Slew [ns] vs Charge in TS4 [fC] in HB",25,-14.5,10.5,100,10.,510.);
-  TimeSlewPulse_HE = new TH2D("TimeSlewPulse_HE","Time Slew [ns] vs Charge in TS4 [fC] in HE",25,-14.5,10.5,100,10.,510.);
-
-  logtimeslewFit = new TF1("logtimeslewFit", "[0]+[1]*TMath::Log(x+[2])",10.,500.);
-  //logtimeslewFit->SetParameters(9.45262e+00, -1.94806e+00, 8.81768e+01);
-  
-  slewFit = new TF1("slewFit","pol4*expo(5)",-15,15);
-  slewFit->SetParameters(1.07618e-02,-4.19145e-06,2.70310e-05,-8.71584e-08,1.86597e-07,3.59216e+00,-1.02057e-01);
-
-  TH2D *test = new TH2D("test", "", 50,0,500,20,-20,20);
-  //TH1D *test2 = new TH1D("test2", "", 50,0,1);
-  //TH1D *test3 = new TH1D("test3", "", 50,0,1);
-
-  //Loop over all events
-  for (int jentry=0; jentry<Entries;jentry++) {
-    fChain->GetEntry(jentry);
-    for (int j = 0; j < (int)PulseCount; j++) {
-      if (IEta[j]>16 && Region==Barrel) continue;
-      if (IEta[j]<17 && Region==Endcap) continue;
-
-      std::vector<double> corrCharge;
-
-      for (int i=0; i<10; i++) {
-	//will need to fix
-	corrCharge.push_back(Charge[j][i]);
-      }
-
-      //if (corrCharge[4]>20) {
-      //cout << corrCharge[5] << ", " << corrCharge[4] << ", " << slewFit->GetX(corrCharge[5]/corrCharge[4]) << endl;
-      //}
-      /*      if (corrCharge[4]>10 && corrCharge[4]<20) {
-	test->Fill(corrCharge[5]/corrCharge[4]);
-      }
-      else if (corrCharge[4]>50 && corrCharge[4]<60) {
-	test2->Fill(corrCharge[5]/corrCharge[4]);
-      }
-      else if (corrCharge[4]>100 && corrCharge[4]<150) {
-	test3->Fill(corrCharge[5]/corrCharge[4]);
-	}*/
-      TimeSlewPulse_All->Fill(-slewFit->GetX(corrCharge[5]/corrCharge[4]),corrCharge[4]);
-      //TimeSlewPulse_All->Fill(corrCharge[4], corrCharge[5]/corrCharge[4]);
-      // TimeSlewPulse_All->Fill(corrCharge[4],slewFit->GetX(corrCharge[5]/corrCharge[4]));
-      //TimeSlewPulse_All->Fill(corrCharge[5]/corrCharge[4], corrCharge[4]);
-      
-      //if(IEta[j] < 16) TimeSlewPulse_HB->Fill(TimeSlew, Pulse);
-      //if(IEta[j] >= 16) TimeSlewPulse_HE->Fill(TimeSlew, Pulse);
-    }
-  }
-
-  /*  cout << test->GetMean() << endl;
-  cout << test2->GetMean() << endl;
-  cout << test3->GetMean() << endl;*/
-
-  //gStyle->SetOptFit(1);
-  TCanvas *c1 = new TCanvas("c1", "c1", 600, 600);
-  gStyle->SetOptStat(0);
-  //c1->SetLogy();
-  //test->Draw();
-  //test2->SetLineColor(kRed);
-  //test2->Draw("same");
-  //test3->SetLineColor(kBlue);
-  //test3->Draw("same");
-  //TimeSlewPulse_All->Draw("colz");
-  //TimeSlewPulse_All->ProfileX("_pfx",1,-1,"s")->Draw();
-
-  //TimeSlewPulse_All->ProfileY("_pfx",1,-1,"s")->Fit("logtimeslewFit");
-  //TimeSlewPulse_All->ProfileY("_pfx",1,-1,"s")->Draw();
-
-  TimeSlewPulse_All->ProfileY("Fit Y Profile",1,-1,"do")->Fit("logtimeslewFit");
-  TimeSlewPulse_All->ProfileY("Fit Y Profile",1,-1,"do")->Draw();
-  c1->SaveAs("timeslewTEST.png");
-  
-  //TimeSlewPulse_HB->ProfileY("HBFit Y Profile",1,-1,"do")->Fit("logtimeslewFit");
-  //TimeSlewPulse_HE->ProfileY("HEFit Y Profile",1,-1,"do")->Fit("logtimeslewFit");
 
 }
 

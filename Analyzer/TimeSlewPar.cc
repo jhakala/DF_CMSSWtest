@@ -22,4 +22,5 @@ void TimeSlewPar::getParameters(const std::vector<double> & inputCharge, const s
   Pulse = (inputCharge[4]-inputPedestal[4]);
   TimeSlew = -slewFit->GetX(RatioTS54);
 
+
 }
