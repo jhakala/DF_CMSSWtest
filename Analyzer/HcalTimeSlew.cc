@@ -20,19 +20,13 @@ double HcalTimeSlew::delay(double fC, ParaSource source, BiasSetting bias) {
     return 13.98-3.20*log(fC+32)-2.82965+10;
   }
   else if (source==MC) {
-    //from xinmei 2/24
-    return 9.453-1.948*log(fC+88.18);
-    //return 928-97.2*log(fC+13937);
-    //return 8.77-2.02*log(fC);
+    // from Xinmei
+    return 10.491-2.25495*log(fC+7.95067);
   }
-  else if (source==MCShift) {
-    //from xinmei 2/24
-    return 16.3284-1.948*log(fC+88.18);
-  }
-
+  
   std::cout << "rechit energy = " <<  std::endl;
   std::cout << "What are you doing for the time slew parameterization?" << std::endl;
-
+  
   return 0;
   
 }

@@ -23,9 +23,9 @@ void HLTv2::apply(const std::vector<double> & inputCharge, const std::vector<dou
   std::vector<double> corrCharge;
   fPedestalSubFxn_.Calculate(inputCharge, inputPedestal, corrCharge);
   
-  Float_t tsShift3=HcalTimeSlew::delay(inputCharge[3]-inputPedestal[3],HcalTimeSlew::MC,fTimeSlewBias); 
-  Float_t tsShift4=HcalTimeSlew::delay(inputCharge[4]-inputPedestal[4],HcalTimeSlew::MC,fTimeSlewBias); 
-  Float_t tsShift5=HcalTimeSlew::delay(inputCharge[5]-inputPedestal[5],HcalTimeSlew::MC,fTimeSlewBias); 
+  Float_t tsShift3=HcalTimeSlew::delay(inputCharge[3],HcalTimeSlew::MC,fTimeSlewBias); 
+  Float_t tsShift4=HcalTimeSlew::delay(inputCharge[4],HcalTimeSlew::MC,fTimeSlewBias); 
+  Float_t tsShift5=HcalTimeSlew::delay(inputCharge[5],HcalTimeSlew::MC,fTimeSlewBias); 
 
   Float_t i3=0;
   getLandauFrac(tsShift3,tsShift3+25,i3);
@@ -100,10 +100,9 @@ void HLTv2::applyXM(const std::vector<double> & inputCharge, const std::vector<d
   double TS35[3];
   double TS46[3];
   double TS57[3];
-  PulseFraction(inputCharge[3]-inputPedestal[3], TS35);
-
-  PulseFraction(inputCharge[4]-inputPedestal[4], TS46);
-  PulseFraction(inputCharge[5]-inputPedestal[5], TS57);
+  PulseFraction(inputCharge[3], TS35);
+  PulseFraction(inputCharge[4], TS46);
+  PulseFraction(inputCharge[5], TS57);
 
   double a3[3] = {TS35[0], TS35[1], TS35[2]};
   double b3[3] = {0., TS46[0], TS46[1]};

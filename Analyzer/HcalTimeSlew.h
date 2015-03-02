@@ -17,7 +17,7 @@
   */
 class HcalTimeSlew {
  public:
-  enum ParaSource { TestStand=0, Data=1, MC=2, MCShift=3 };
+  enum ParaSource { TestStand=0, Data=1, MC=2 };
   enum BiasSetting { Slow=0, Medium=1, Fast=2 };
   
   /** \brief Returns the amount (ns) by which a pulse of the given
