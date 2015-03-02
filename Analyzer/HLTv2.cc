@@ -31,7 +31,6 @@ void HLTv2::apply(const std::vector<double> & inputCharge, const std::vector<dou
   getLandauFrac(tsShift3,tsShift3+25,i3);
   Float_t n3=0;
   getLandauFrac(tsShift3+25,tsShift3+50,n3);
-  cout << inputCharge[3]-inputPedestal[3] << ", " << i3 << ", " << n3 << endl;
 
   Float_t i4=0;
   getLandauFrac(tsShift4,tsShift4+25,i4);
@@ -53,23 +52,37 @@ void HLTv2::apply(const std::vector<double> & inputCharge, const std::vector<dou
     ch5=(i4*corrCharge[5]-n4*corrCharge[4])/(i4*i5);
   }
   
-  if (ch5<-3 && ch4>15 && fNegStrat==HLTv2::ReqPos) {
+  if (ch5<-3 && fNegStrat==HLTv2::ReqPos) {
     ch4=ch4+(ch5+3);
     ch5=-3;
   }
 
-  if (ch3<1 && fNegStrat==HLTv2::ReqPos) {
+  if (fNegStrat==HLTv2::FromGreg) {
+    if (ch3<-3) {
+      ch3=-3;
+      ch4 = corrCharge[4]/i4;
+      ch5=(i4*corrCharge[5]-n4*corrCharge[4])/(i4*i5);
+    }
+    if (ch5<-3 && ch4>15) {
+      double ratio = (corrCharge[4]-ch3*i3)/(corrCharge[5]+3*i5);
+      if (ratio < 5 && ratio > 0.5) {
+	double invG = -13.11+11.29*TMath::Sqrt(2*TMath::Log(5.133/ratio));
+	Float_t iG=0;
+	getLandauFrac(invG,invG+25,iG);
+	ch4=(corrCharge[4]-ch3*n3)/(iG);
+	ch5=-3;
+      }
+    }
+  }
+  
+  if (ch3<1) {// && (fNegStrat==HLTv2::ReqPos || fNegStrat==HLTv2::FromGreg)) {
     ch3=0;
   }
-  if (ch4<1 && fNegStrat==HLTv2::ReqPos) {
+  if (ch4<1) {// && (fNegStrat==HLTv2::ReqPos || fNegStrat==HLTv2::FromGreg)) {
     ch4=0;
   }
-  if (ch5<1 && fNegStrat==HLTv2::ReqPos) {
+  if (ch5<1) {// && (fNegStrat==HLTv2::ReqPos || fNegStrat==HLTv2::FromGreg)) {
     ch5=0;
-  }
-
-  if (ch4<1 && fNegStrat==HLTv2::ReqPos) {
-    ch4=0;
   }
 
   HLTOutput.clear();
@@ -88,8 +101,6 @@ void HLTv2::applyXM(const std::vector<double> & inputCharge, const std::vector<d
   double TS46[3];
   double TS57[3];
   PulseFraction(inputCharge[3]-inputPedestal[3], TS35);
-
-  cout << inputCharge[3]-inputPedestal[3] << ", " << TS35[0] << ", " << TS35[1] << ", " << TS35[2] << endl;
 
   PulseFraction(inputCharge[4]-inputPedestal[4], TS46);
   PulseFraction(inputCharge[5]-inputPedestal[5], TS57);

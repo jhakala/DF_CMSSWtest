@@ -23,7 +23,7 @@
 
 class HLTv2 {
  public:
-  enum NegStrategy {DoNothing=0, ReqPos=1};  
+  enum NegStrategy {DoNothing=0, ReqPos=1, FromGreg=2};  
   HLTv2();
   ~HLTv2();
 

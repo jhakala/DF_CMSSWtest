@@ -214,9 +214,9 @@ void Analysis::Process() {
   fout = new TFile(Output_File.c_str(), "RECREATE");
 
   DoHlt();
-  MakeTimeSlewPlots();
+  //MakeTimeSlewPlots();
   //MakePedestalPlots();
-  MakeTimeSlewParam();  
+  //MakeTimeSlewParam();  
 }
 
 void Analysis::DefineHistograms()
@@ -226,11 +226,11 @@ void Analysis::DefineHistograms()
  
 void Analysis::TSP()
 {
-  TimeSlewPulse_All = new TH2F("TimeSlewPulse_All","Time Slew [ns] vs Charge in TS4 [fC]",25,-14.5,10.5,100,0.,1000.);
+  TimeSlewPulse_All = new TH2D("TimeSlewPulse_All","Time Slew [ns] vs Charge in TS4 [fC]",25,-14.5,10.5,100,0.,1000.);
   TimeSlewPulse_All->Sumw2();
-  TimeSlewPulse_HB = new TH2F("TimeSlewPulse_HB","Time Slew [ns] vs Charge in TS4 [fC] in HB",25,-14.5,10.5,100,0.,1000.);
+  TimeSlewPulse_HB = new TH2D("TimeSlewPulse_HB","Time Slew [ns] vs Charge in TS4 [fC] in HB",25,-14.5,10.5,100,0.,1000.);
   TimeSlewPulse_HB->Sumw2();
-  TimeSlewPulse_HE = new TH2F("TimeSlewPulse_HE","Time Slew [ns] vs Charge in TS4 [fC] in HE",25,-14.5,10.5,100,0.,1000.);
+  TimeSlewPulse_HE = new TH2D("TimeSlewPulse_HE","Time Slew [ns] vs Charge in TS4 [fC] in HE",25,-14.5,10.5,100,0.,1000.);
   TimeSlewPulse_HE->Sumw2();
 
   //Logrithmic
@@ -327,9 +327,13 @@ void Analysis::DoHlt() {
 
   //Setup HLT pedestal/baseline subtraction module
   pedSubFxn_->Init(((PedestalSub::Method)Baseline), Condition, Threshold, Quantile);
+  //pedSubFxn_->Init(((PedestalSub::Method)1), Condition, 2.7, 0.0);
 
   //Set HLT module
   hltv2_->Init((HcalTimeSlew::ParaSource)Time_Slew, HcalTimeSlew::Medium, (HLTv2::NegStrategy)Neg_Charges, *pedSubFxn_);
+  //hltv2_->Init((HcalTimeSlew::ParaSource)2, HcalTimeSlew::Medium, (HLTv2::NegStrategy)0, *pedSubFxn_); // no neg. correction
+  //hltv2_->Init((HcalTimeSlew::ParaSource)2, HcalTimeSlew::Medium, (HLTv2::NegStrategy)1, *pedSubFxn_); // "KISS" correction
+  //hltv2_->Init((HcalTimeSlew::ParaSource)2, HcalTimeSlew::Medium, (HLTv2::NegStrategy)2, *pedSubFxn_); // Greg's correction
 
   //Setup plots for what we care about
   int xBins=200, xMin=-10,xMax=40;
