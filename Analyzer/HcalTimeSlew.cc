@@ -30,7 +30,7 @@ double HcalTimeSlew::delay(double fC, ParaSource source, BiasSetting bias) {
     //1  p0           9.27638e+00   3.45586e-02   1.17592e-04   8.21769e-08
     //2  p1          -2.05585e+00   1.10061e-02   3.74505e-05   2.58031e-07
 
-    return std::min(6.0,0.27638-2.05585*log(fC));
+    return std::min(6.0,9.27638-2.05585*log(fC));
     
   }
   
