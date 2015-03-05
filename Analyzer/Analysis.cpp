@@ -370,12 +370,12 @@ void Analysis::DoHlt() {
 
   //Set HLT module
   //hltv2_->Init((HcalTimeSlew::ParaSource)Time_Slew, HcalTimeSlew::Medium, (HLTv2::NegStrategy)Neg_Charges, *pedSubFxn_);
-  hltv2_->Init((HcalTimeSlew::ParaSource)2, HcalTimeSlew::Medium, (HLTv2::NegStrategy)0, *pedSubFxn_); // no neg. correction
+  //hltv2_->Init((HcalTimeSlew::ParaSource)2, HcalTimeSlew::Medium, (HLTv2::NegStrategy)0, *pedSubFxn_); // no neg. correction
   //hltv2_->Init((HcalTimeSlew::ParaSource)2, HcalTimeSlew::Medium, (HLTv2::NegStrategy)1, *pedSubFxn_); // "KISS" correction
-  //hltv2_->Init((HcalTimeSlew::ParaSource)2, HcalTimeSlew::Medium, (HLTv2::NegStrategy)2, *pedSubFxn_); // Greg's correction
+  hltv2_->Init((HcalTimeSlew::ParaSource)2, HcalTimeSlew::Medium, (HLTv2::NegStrategy)2, *pedSubFxn_); // Greg's correction
 
   //Setup plots for what we care about
-  int xBins=200, xMin=-10,xMax=40;
+  int xBins=200, xMin=0,xMax=200;
 
   TH1D *a3 = new TH1D("a3","", xBins,xMin,xMax);
   TH1D *a4 = new TH1D("a4","", xBins,xMin,xMax);
@@ -487,7 +487,7 @@ void Analysis::DoHlt() {
   h45vHLT->GetXaxis()->SetTitleSize(0.05);
   h45vHLT->GetYaxis()->SetTitle("Charge from HLT [fC]");
   h45vHLT->GetYaxis()->SetTitleSize(0.05);
-  h45vHLT->Draw("colz");
+  h45vHLT->Draw("");
   c1->SaveAs(TString(Plot_Dir.c_str())+"/h4vHLT.png");
   
   p45vHLT->GetXaxis()->SetTitle("Charge in TS4 [fC]");
@@ -502,7 +502,7 @@ void Analysis::DoHlt() {
   hM2vHLT->GetXaxis()->SetTitleSize(0.05);
   hM2vHLT->GetYaxis()->SetTitle("Charge from HLT [fC]");
   hM2vHLT->GetYaxis()->SetTitleSize(0.05);
-  hM2vHLT->Draw("colz");
+  hM2vHLT->Draw("");
   c1->SaveAs(TString(Plot_Dir.c_str())+"/hM2vHLT.png");
 
   pM2vHLT->GetXaxis()->SetTitle("M2 Charge [fC]");

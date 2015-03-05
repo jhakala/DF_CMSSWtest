@@ -23,35 +23,38 @@ void HLTv2::apply(const std::vector<double> & inputCharge, const std::vector<dou
   std::vector<double> corrCharge;
   fPedestalSubFxn_.Calculate(inputCharge, inputPedestal, corrCharge);
   
-  Float_t tsShift3=-HcalTimeSlew::delay(inputCharge[3],HcalTimeSlew::MC,fTimeSlewBias); 
-  Float_t tsShift4=-HcalTimeSlew::delay(inputCharge[4],HcalTimeSlew::MC,fTimeSlewBias); 
-  Float_t tsShift5=-HcalTimeSlew::delay(inputCharge[5],HcalTimeSlew::MC,fTimeSlewBias); 
+  Float_t tsShift3=HcalTimeSlew::delay(inputCharge[3],HcalTimeSlew::MC,fTimeSlewBias); 
+  Float_t tsShift4=HcalTimeSlew::delay(inputCharge[4],HcalTimeSlew::MC,fTimeSlewBias); 
+  Float_t tsShift5=HcalTimeSlew::delay(inputCharge[5],HcalTimeSlew::MC,fTimeSlewBias); 
 
   Float_t i3=0;
-  getLandauFrac(tsShift3,tsShift3+25,i3);
+  getLandauFrac(-tsShift3,-tsShift3+25,i3);
   Float_t n3=0;
-  getLandauFrac(tsShift3+25,tsShift3+50,n3);
+  getLandauFrac(-tsShift3+25,-tsShift3+50,n3);
 
   Float_t i4=0;
-  getLandauFrac(tsShift4,tsShift4+25,i4);
+  getLandauFrac(-tsShift4,-tsShift4+25,i4);
   Float_t n4=0;
-  getLandauFrac(tsShift4+25,tsShift4+50,n4);
+  getLandauFrac(-tsShift4+25,-tsShift4+50,n4);
 
   Float_t i5=0;
-  getLandauFrac(tsShift5,tsShift5+25,i5);
+  getLandauFrac(-tsShift5,-tsShift5+25,i5);
   Float_t n5=0;
-  getLandauFrac(tsShift5+25,tsShift5+50,n5);
+  getLandauFrac(-tsShift5+25,-tsShift5+50,n5);
 
   Float_t ch3=corrCharge[3]/i3;
   Float_t ch4=(i3*corrCharge[4]-n3*corrCharge[3])/(i3*i4);
   Float_t ch5=(n3*n4*corrCharge[3]-i3*n4*corrCharge[4]+i3*i4*corrCharge[5])/(i3*i4*i5);
 
+
   if (ch3<-3 && fNegStrat==HLTv2::ReqPos) {
+    //cout << "original: " << ch3 <<", " << ch4 << ", " << ch5 << endl;
     ch3=-3;
     ch4=corrCharge[4]/i4;
     ch5=(i4*corrCharge[5]-n4*corrCharge[4])/(i4*i5);
+    //cout << "new: " << ch3 <<", " << ch4 << ", " << ch5 << endl;
   }
-  
+
   if (ch5<-3 && fNegStrat==HLTv2::ReqPos) {
     ch4=ch4+(ch5+3);
     ch5=-3;
@@ -60,18 +63,20 @@ void HLTv2::apply(const std::vector<double> & inputCharge, const std::vector<dou
   if (fNegStrat==HLTv2::FromGreg) {
     if (ch3<-3) {
       ch3=-3;
-      ch4 = corrCharge[4]/i4;
+      ch4=corrCharge[4]/i4;
       ch5=(i4*corrCharge[5]-n4*corrCharge[4])/(i4*i5);
     }
     if (ch5<-3 && ch4>15) {
+      //cout << "original: " << ch3 <<", " << ch4 << ", " << ch5 << endl;
       double ratio = (corrCharge[4]-ch3*i3)/(corrCharge[5]+3*i5);
       if (ratio < 5 && ratio > 0.5) {
 	double invG = -13.11+11.29*TMath::Sqrt(2*TMath::Log(5.133/ratio));
 	Float_t iG=0;
-	getLandauFrac(invG,invG+25,iG);
+	getLandauFrac(-invG,-invG+25,iG);
 	ch4=(corrCharge[4]-ch3*n3)/(iG);
 	ch5=-3;
       }
+      //cout << "new: " << ch3 <<", " << ch4 << ", " << ch5 << endl;
     }
   }
   
