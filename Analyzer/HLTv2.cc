@@ -31,6 +31,8 @@ void HLTv2::apply(const std::vector<double> & inputCharge, const std::vector<dou
   getLandauFrac(-tsShift3,-tsShift3+25,i3);
   Float_t n3=0;
   getLandauFrac(-tsShift3+25,-tsShift3+50,n3);
+  Float_t nn3=0;
+  getLandauFrac(-tsShift3+50,-tsShift3+75,nn3);
 
   Float_t i4=0;
   getLandauFrac(-tsShift4,-tsShift4+25,i4);
@@ -44,8 +46,7 @@ void HLTv2::apply(const std::vector<double> & inputCharge, const std::vector<dou
 
   Float_t ch3=corrCharge[3]/i3;
   Float_t ch4=(i3*corrCharge[4]-n3*corrCharge[3])/(i3*i4);
-  Float_t ch5=(n3*n4*corrCharge[3]-i3*n4*corrCharge[4]+i3*i4*corrCharge[5])/(i3*i4*i5);
-
+  Float_t ch5=(n3*n4*corrCharge[3]-i4*nn3*corrCharge[3]-i3*n4*corrCharge[4]+i3*i4*corrCharge[5])/(i3*i4*i5);
 
   if (ch3<-3 && fNegStrat==HLTv2::ReqPos) {
     //cout << "original: " << ch3 <<", " << ch4 << ", " << ch5 << endl;
@@ -75,6 +76,7 @@ void HLTv2::apply(const std::vector<double> & inputCharge, const std::vector<dou
 	getLandauFrac(-invG,-invG+25,iG);
 	ch4=(corrCharge[4]-ch3*n3)/(iG);
 	ch5=-3;
+	tsShift4=invG;
       }
       //cout << "new: " << ch3 <<", " << ch4 << ", " << ch5 << endl;
     }
@@ -94,6 +96,7 @@ void HLTv2::apply(const std::vector<double> & inputCharge, const std::vector<dou
   HLTOutput.push_back(ch3);
   HLTOutput.push_back(ch4);
   HLTOutput.push_back(ch5);
+  HLTOutput.push_back(tsShift4);
 
 }
 
@@ -158,7 +161,7 @@ void HLTv2::PulseFraction(Double_t fC, Double_t *TS46) const{
   static Double_t TS5par[3] = {0.258, 0.0178, 4.786e-4}; // pol2 parameters for the TS5 fraction                                       
   static Double_t TS6par[4] = {0.06391, 0.002737, 8.396e-05, 1.475e-06};// pol3 parameters for the TS6 fraction                        
 
-  Double_t tslew = -HcalTimeSlew::delay(fC,HcalTimeSlew::MC,fTimeSlewBias);
+  Double_t tslew = HcalTimeSlew::delay(fC,HcalTimeSlew::MC,fTimeSlewBias);
 
   TS46[0] = TS4par[0] * TMath::Gaus(tslew,TS4par[1],TS4par[2]); // fraction of pulse in the TS4          
   TS46[1] = TS5par[0] + TS5par[1]*tslew + TS5par[2]*tslew*tslew; // fraction of pulse in the T5S
