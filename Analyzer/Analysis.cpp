@@ -392,6 +392,8 @@ void Analysis::DoHlt() {
   TH2D* hM2vHLT = new TH2D("hM2vHLT", "", xBins,xMin,xMax,xBins,xMin,xMax);
   TProfile *pM2vHLT = new TProfile("pM2vHLT", "", xBins,xMin,xMax,-10,10);
 
+  TH2D* hTiming = new TH2D("hTiming", "", 100, -20, 20, 100, -20, 20);
+
   //Loop over all events
   for (int jentry=0; jentry<Entries;jentry++) {
     fChain->GetEntry(jentry);
@@ -432,6 +434,7 @@ void Analysis::DoHlt() {
 	if (offlineAns.size()>1) {
 	  hM2vHLT->Fill( offlineAns.at(0)/Gain[j][0], hltAns.at(1),1);
 	  pM2vHLT->Fill( offlineAns.at(0)/Gain[j][0], -(hltAns.at(1)*Gain[j][0]-(offlineAns.at(0)))/((offlineAns.at(0))),1);
+	  hTiming->Fill( offlineAns.at(1), hltAns.at(3)+iTimeMean );
 	}
       }
 
@@ -512,6 +515,14 @@ void Analysis::DoHlt() {
   pM2vHLT->GetYaxis()->SetRangeUser(-1,1);
   pM2vHLT->Draw();
   c1->SaveAs(TString(Plot_Dir.c_str())+"/pM2vHLT.png");
+
+  hTiming->GetXaxis()->SetTitle("M2 Timing [ns]");
+  hTiming->GetXaxis()->SetTitleSize(0.05);
+  hTiming->GetYaxis()->SetTitle("HLT Timing [ns]");
+  hTiming->GetYaxis()->SetTitleSize(0.05);
+  hTiming->Draw("colz");
+  c1->SaveAs(TString(Plot_Dir.c_str())+"/htiming.png");
+
 
 }
 

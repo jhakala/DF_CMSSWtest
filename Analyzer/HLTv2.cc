@@ -31,6 +31,8 @@ void HLTv2::apply(const std::vector<double> & inputCharge, const std::vector<dou
   getLandauFrac(-tsShift3,-tsShift3+25,i3);
   Float_t n3=0;
   getLandauFrac(-tsShift3+25,-tsShift3+50,n3);
+  Float_t nn3=0;
+  getLandauFrac(-tsShift3+50,-tsShift3+75,nn3);
 
   Float_t i4=0;
   getLandauFrac(-tsShift4,-tsShift4+25,i4);
@@ -74,6 +76,7 @@ void HLTv2::apply(const std::vector<double> & inputCharge, const std::vector<dou
 	getLandauFrac(-invG,-invG+25,iG);
 	ch4=(corrCharge[4]-ch3*n3)/(iG);
 	ch5=-3;
+	tsShift4=invG;
       }
       //cout << "new: " << ch3 <<", " << ch4 << ", " << ch5 << endl;
     }
@@ -93,6 +96,7 @@ void HLTv2::apply(const std::vector<double> & inputCharge, const std::vector<dou
   HLTOutput.push_back(ch3);
   HLTOutput.push_back(ch4);
   HLTOutput.push_back(ch5);
+  HLTOutput.push_back(tsShift4);
 
 }
 
