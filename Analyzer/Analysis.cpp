@@ -372,7 +372,8 @@ void Analysis::DoHlt() {
   //hltv2_->Init((HcalTimeSlew::ParaSource)Time_Slew, HcalTimeSlew::Medium, (HLTv2::NegStrategy)Neg_Charges, *pedSubFxn_);
   //hltv2_->Init((HcalTimeSlew::ParaSource)2, HcalTimeSlew::Medium, (HLTv2::NegStrategy)0, *pedSubFxn_); // no neg. correction
   //hltv2_->Init((HcalTimeSlew::ParaSource)2, HcalTimeSlew::Medium, (HLTv2::NegStrategy)1, *pedSubFxn_); // "KISS" correction
-  hltv2_->Init((HcalTimeSlew::ParaSource)2, HcalTimeSlew::Medium, (HLTv2::NegStrategy)2, *pedSubFxn_); // Greg's correction
+
+  hltv2_->Init(HcalTimeSlew::MC, HcalTimeSlew::Medium, (HLTv2::NegStrategy)2, *pedSubFxn_); // Greg's correction
 
   //Setup plots for what we care about
   int xBins=200, xMin=0,xMax=200;
@@ -413,7 +414,6 @@ void Analysis::DoHlt() {
       
       // Begin Online
       hltv2_->apply(inputCaloSample,inputPedestal,hltAns);
-      //hltv2_->applyXM(inputCaloSample,inputPedestal,hltAns);
 
       if (hltAns.size()>1) {
 
